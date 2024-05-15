@@ -56,29 +56,53 @@ class ProductImageSerializer(serializers.ModelSerializer):
         fields = '__all__'
 
 class OrderDetailsSerializer(serializers.ModelSerializer):
+    product_snapshot = serializers.JSONField(read_only=True)
+    price_at_purchase = serializers.DecimalField(max_digits=10, decimal_places=2, read_only=True)
+
     class Meta:
         model = OrderDetails
-        fields = ['product', 'quantity', 'price_at_purchase', 'custom_name', 'custom_number', 'patches']
+        fields = ['order', 'product', 'quantity', 'price_at_purchase', 'product_snapshot', 'custom_name', 'custom_number', 'patches']
 
-class OrderSerializer(serializers.ModelSerializer):
-    items = OrderDetailsSerializer(many=True)
-
-    class Meta:
-        model = Order
-        fields = ['id', 'user', 'order_date', 'status', 'items']
+    def validate_product(self, value):
+        # Check if product exists and is valid
+        try:
+            product = Product.objects.get(pk=value.id)
+        except Product.DoesNotExist:
+            raise serializers.ValidationError("Invalid pk \"{}\" - object does not exist.".format(value.id))
+        return product
 
     def create(self, validated_data):
-        items_data = validated_data.pop('items')
-        order = Order.objects.create(**validated_data)
-        for item_data in items_data:
-            OrderDetails.objects.create(order=order, **item_data)
-        return order
+        product = validated_data.get('product')
 
-    def validate(self, data):
-        # Example validation: ensure there are items in the order
-        if not data.get('items'):
-            raise serializers.ValidationError("The order must include at least one item.")
-        return data
+        # Automatically set the price at purchase and product snapshot
+        validated_data['price_at_purchase'] = product.price
+        validated_data['product_snapshot'] = {
+            'name': product.name,
+            'price': str(product.price),
+            'main_image_url': product.main_image_url,
+            'description': product.description,
+            'category': product.category.name if product.category else None
+        }
+
+        return OrderDetails.objects.create(**validated_data)
+
+
+class OrderSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Order
+        fields = '__all__'
+
+    def create(self, validated_data):
+        # Retrieve the user from the context
+        user = self.context['request'].user
+
+        # Add the user to the validated data before creating the order
+        validated_data['user'] = user
+
+        # Create and return the order
+        order = Order.objects.create(**validated_data)
+        return order
+    
 class ReviewSerializer(serializers.ModelSerializer):
     class Meta:
         model = Review

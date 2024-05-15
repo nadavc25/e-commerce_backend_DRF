@@ -17,6 +17,19 @@ class User(AbstractUser):
     class Meta:
         db_table = 'custom_user'
 
+class Address(models.Model):
+    user = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE, related_name='addresses')
+    address_type = models.CharField(max_length=10, choices=(('billing', 'Billing'), ('shipping', 'Shipping')))
+    line1 = models.CharField(max_length=255)
+    line2 = models.CharField(max_length=255, blank=True)
+    city = models.CharField(max_length=100)
+    state = models.CharField(max_length=100)
+    postal_code = models.CharField(max_length=20)
+    country = models.CharField(max_length=100)
+
+    def __str__(self):
+        return f"{self.line1}, {self.city}, {self.country}"
+
 class Brand(models.Model):
     name = models.CharField(max_length=100, unique=True)
 
@@ -124,12 +137,13 @@ class Product(models.Model):
         ('3XL', 'Extra Large'),
         ('4XL', 'Extra Large'),
     )
-
+    
     name = models.CharField(max_length=200)
     price = models.DecimalField(max_digits=10, decimal_places=2)
     description = models.TextField()
-    max_available_size = models.CharField(max_length=3, choices=MAX_SIZE_CHOICES)
+    max_available_size = models.CharField(max_length=3, choices=MAX_SIZE_CHOICES, default='2XL')
     main_image_url = models.URLField(blank=True, null=True)  # URL of the main image stored in Firebase Storage
+    category = models.ForeignKey(Category, on_delete=models.CASCADE, blank=True, null=True)
     sport_type = models.ForeignKey(SportType, on_delete=models.CASCADE)
     league = models.ForeignKey(League, on_delete=models.CASCADE)
     team = models.ForeignKey(Team, on_delete=models.CASCADE)
@@ -141,6 +155,7 @@ class Product(models.Model):
     collection = models.ForeignKey(Collection, on_delete=models.CASCADE, blank=True, null=True)
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
+    available = models.BooleanField(default=False)
     slug = models.SlugField(max_length=200, unique=True, blank=True)
 
     def save(self, *args, **kwargs):
@@ -158,9 +173,9 @@ class Product(models.Model):
     def __str__(self):
         return f"{self.name} - Up to {self.max_available_size}"
     
-    class Meta:
-        # Assuming you want each product to be unique by these combined attributes
-        unique_together = ('name',)
+    # class Meta:
+    #     # Assuming you want each product to be unique by these combined attributes
+    #     unique_together = ('name',)
 
 # Patch model
 class Patch(models.Model):
@@ -185,26 +200,40 @@ class ProductImage(models.Model):
 class Order(models.Model):
     STATUS_CHOICES = (
         ('pending', 'Pending'),
-        ('completed', 'Completed'),
+        ('processing', 'Processing'),
+        ('shipped', 'Shipped'),
+        ('delivered', 'Delivered'),
         ('cancelled', 'Cancelled'),
     )
+    PAYMENT_METHODS = (
+        ('credit_card', 'Credit Card'),
+        ('paypal', 'PayPal'),
+        ('bank_transfer', 'Bank Transfer'),
+    )
+
     user = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE)
     order_date = models.DateTimeField(auto_now_add=True)
-    status = models.CharField(max_length=10, choices=STATUS_CHOICES, default='pending')
+    status = models.CharField(max_length=12, choices=STATUS_CHOICES, default='pending')
+    payment_method = models.CharField(max_length=15, choices=PAYMENT_METHODS, default='credit_card')
+    shipping_address = models.ForeignKey(Address, related_name='order_shipping', on_delete=models.PROTECT, null=True)
+    billing_address = models.ForeignKey(Address, related_name='order_billing', on_delete=models.PROTECT, null=True)
+    expected_delivery_date = models.DateField(null=True, blank=True)
 
     def calculate_total_price(self):
         total_price = sum([item.price_at_purchase * item.quantity for item in self.items.all()])
         return total_price
-    
+
     def __str__(self):
         return f"Order {self.id} by {self.user.username}"
     
 # OrderItem model
-class OrderItem(models.Model):
+class OrderDetails(models.Model):
     order = models.ForeignKey(Order, related_name='items', on_delete=models.CASCADE)
     product = models.ForeignKey(Product, on_delete=models.CASCADE)
+    product_snapshot = models.JSONField()  # Example: {'name': 'product_name', 'price': 'product_price', 'image_url': 'product_image_url'}
     quantity = models.PositiveIntegerField()
     price_at_purchase = models.DecimalField(max_digits=10, decimal_places=2)
+    discount = models.DecimalField(max_digits=10, decimal_places=2, default=0.00)
     custom_name = models.CharField(max_length=50, blank=True, null=True)  # For custom name printing
     custom_number = models.IntegerField(blank=True, null=True)  # For custom number printing
     patches = models.ManyToManyField(Patch, blank=True)  # Many patches can be selected

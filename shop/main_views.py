@@ -16,13 +16,18 @@ def index(request):
 class Logout(APIView):
     def post(self, request):
         try:
-            refresh_token = request.data["refresh_token"]
-            token = RefreshToken(refresh_token)
-            token.blacklist()
-            return Response({"message": "Logout successful."}, status=status.HTTP_205_RESET_CONTENT)
+            # Retrieve refresh token from the request
+            refresh_token = request.data.get("refresh_token")
+            if refresh_token:
+                # Blacklist the token
+                token = RefreshToken(refresh_token)
+                token.blacklist()
+                return Response({"message": "Logout successful."}, status=status.HTTP_205_RESET_CONTENT)
+            else:
+                return Response({"error": "Missing refresh token"}, status=status.HTTP_400_BAD_REQUEST)
         except Exception as e:
             return Response({"error": str(e)}, status=status.HTTP_400_BAD_REQUEST)
-
+        
 @api_view(['POST'])
 def register(request):
     print(request)

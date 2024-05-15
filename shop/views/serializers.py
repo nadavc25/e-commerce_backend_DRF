@@ -1,7 +1,7 @@
 # shop\views\serializers.py
 
 from rest_framework import serializers
-from ..models import League, Category, User, Patch, Product, ProductImage, Order, OrderItem, Review, Cart, CartItem, Wishlist, WishlistItem, Team
+from ..models import League, Category, User, Patch, Product, ProductImage, Order, OrderDetails, Review, Cart, CartItem, Wishlist, WishlistItem, Team
 from rest_framework_simplejwt.serializers import TokenObtainPairSerializer
 from ..utils import generate_firebase_storage_url  # Make sure this is correctly imported
 
@@ -11,7 +11,11 @@ class MyTokenObtainPairSerializer(TokenObtainPairSerializer):
     @classmethod
     def get_token(cls, user):
         token = super().get_token(user)
-        # Add custom columns (user return payload - when login)
+
+        # Log the token payload for debugging
+        print("Token Payload Before Adding Custom Data:", token.payload)
+
+        # Add custom claims
         token['username'] = user.username
         token['email'] = user.email
         token['is_Admin'] = user.is_superuser
@@ -19,6 +23,10 @@ class MyTokenObtainPairSerializer(TokenObtainPairSerializer):
         token['last_name'] = user.last_name
         token['phone_number'] = user.phone_number
         token['profile_picture'] = user.profile_picture
+
+        # Log the token payload after modifications
+        print("Token Payload After Adding Custom Data:", token.payload)
+
         return token
 
 class UserSerializer(serializers.ModelSerializer):
@@ -47,16 +55,30 @@ class ProductImageSerializer(serializers.ModelSerializer):
         model = ProductImage
         fields = '__all__'
 
+class OrderDetailsSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = OrderDetails
+        fields = ['product', 'quantity', 'price_at_purchase', 'custom_name', 'custom_number', 'patches']
+
 class OrderSerializer(serializers.ModelSerializer):
+    items = OrderDetailsSerializer(many=True)
+
     class Meta:
         model = Order
-        fields = '__all__'
+        fields = ['id', 'user', 'order_date', 'status', 'items']
 
-class OrderItemSerializer(serializers.ModelSerializer):
-    class Meta:
-        model = OrderItem
-        fields = '__all__'
+    def create(self, validated_data):
+        items_data = validated_data.pop('items')
+        order = Order.objects.create(**validated_data)
+        for item_data in items_data:
+            OrderDetails.objects.create(order=order, **item_data)
+        return order
 
+    def validate(self, data):
+        # Example validation: ensure there are items in the order
+        if not data.get('items'):
+            raise serializers.ValidationError("The order must include at least one item.")
+        return data
 class ReviewSerializer(serializers.ModelSerializer):
     class Meta:
         model = Review

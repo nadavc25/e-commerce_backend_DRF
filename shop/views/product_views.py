@@ -1,3 +1,4 @@
+# shop\views\product_views.py
 from rest_framework.views import APIView
 from rest_framework.response import Response
 from rest_framework import status
@@ -9,11 +10,12 @@ from ..models import League, Product, SportType, Team
 
 class ProductView(APIView):
     def get_queryset(self):
-        queryset = Product.objects.all()
+        queryset = Product.objects.filter(available=True)  # Only fetch products that are marked as available
         league_slug = self.request.query_params.get('league')
         sport_type_slug = self.request.query_params.get('sport_type')
         team_slug = self.request.query_params.get('team')
 
+        
         # Apply filters if they are in query parameters
         if league_slug:
             print(league_slug)

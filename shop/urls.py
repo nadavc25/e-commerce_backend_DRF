@@ -1,5 +1,7 @@
 # shop\urls.py
 from django.urls import path
+
+from shop.views import auth_views
 from .views import (
     cart_view, category_views, order_views, patch_view, product_views,
     review_view, team_view, user_views, wishlist_view, League_View
@@ -29,4 +31,5 @@ urlpatterns = [
     path('reviews/', review_view.ReviewView.as_view(), name='review_list'),
     path('reviews/<int:pk>/', review_view.ReviewView.as_view(), name='review_detail'),
     # Add more patterns for other views as needed
+    path('auth/google/', auth_views.GoogleLoginAPIView.as_view(), name='google-login'),
 ]

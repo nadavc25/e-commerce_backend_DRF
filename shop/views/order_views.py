@@ -1,11 +1,12 @@
+# shop\views\order_views.py
 from django.db import transaction
 from rest_framework.views import APIView
 from rest_framework.response import Response
 from rest_framework import status
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.decorators import permission_classes
-from .serializers import OrderSerializer, OrderItemSerializer
-from ..models import Order, OrderItem
+from .serializers import OrderSerializer, OrderDetailsSerializer
+from ..models import Order, OrderDetails
 
 @permission_classes([IsAuthenticated])
 class OrderView(APIView):
@@ -19,7 +20,7 @@ class OrderView(APIView):
                 items_data = request.data.get("items", [])
                 for item_data in items_data:
                     item_data['order'] = order.id
-                    item_serializer = OrderItemSerializer(data=item_data)
+                    item_serializer = OrderDetailsSerializer(data=item_data)
                     if item_serializer.is_valid():
                         item_serializer.save()
                     else:

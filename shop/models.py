@@ -17,18 +17,6 @@ class User(AbstractUser):
     class Meta:
         db_table = 'custom_user'
 
-class Address(models.Model):
-    user = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE, related_name='addresses')
-    address_type = models.CharField(max_length=10, choices=(('billing', 'Billing'), ('shipping', 'Shipping')))
-    line1 = models.CharField(max_length=255)
-    line2 = models.CharField(max_length=255, blank=True)
-    city = models.CharField(max_length=100)
-    state = models.CharField(max_length=100)
-    postal_code = models.CharField(max_length=20)
-    country = models.CharField(max_length=100)
-
-    def __str__(self):
-        return f"{self.line1}, {self.city}, {self.country}"
 
 class Brand(models.Model):
     name = models.CharField(max_length=100, unique=True)
@@ -139,8 +127,8 @@ class Product(models.Model):
     )
     
     name = models.CharField(max_length=200)
-    price = models.DecimalField(max_digits=10, decimal_places=2)
-    description = models.TextField()
+    price = models.DecimalField(max_digits=10, decimal_places=2, blank=True, null=True)
+    description = models.TextField(blank=True)
     max_available_size = models.CharField(max_length=3, choices=MAX_SIZE_CHOICES, default='2XL')
     main_image_url = models.URLField(blank=True, null=True)  # URL of the main image stored in Firebase Storage
     category = models.ForeignKey(Category, on_delete=models.CASCADE, blank=True, null=True)
@@ -215,28 +203,32 @@ class Order(models.Model):
     order_date = models.DateTimeField(auto_now_add=True)
     status = models.CharField(max_length=12, choices=STATUS_CHOICES, default='pending')
     payment_method = models.CharField(max_length=15, choices=PAYMENT_METHODS, default='credit_card')
-    shipping_address = models.ForeignKey(Address, related_name='order_shipping', on_delete=models.PROTECT, null=True)
-    billing_address = models.ForeignKey(Address, related_name='order_billing', on_delete=models.PROTECT, null=True)
+    shipping_address = models.JSONField(default=dict)  # Storing address as JSON
+    billing_address = models.JSONField(default=dict)  # Storing address as JSON
+    phone_number = models.CharField(max_length=15, blank=True, null=True)
     expected_delivery_date = models.DateField(null=True, blank=True)
+    total_price = models.DecimalField(max_digits=10, decimal_places=2, default="0.00")
 
     def calculate_total_price(self):
         total_price = sum([item.price_at_purchase * item.quantity for item in self.items.all()])
         return total_price
-
+    
     def __str__(self):
         return f"Order {self.id} by {self.user.username}"
-    
+        
 # OrderItem model
 class OrderDetails(models.Model):
-    order = models.ForeignKey(Order, on_delete=models.CASCADE)
+    order = models.ForeignKey(Order, related_name='items', on_delete=models.CASCADE)
     product = models.ForeignKey(Product, on_delete=models.CASCADE)
     product_snapshot = models.JSONField()  # Example: {'name': 'product_name', 'price': 'product_price', 'image_url': 'product_image_url'}
     quantity = models.PositiveIntegerField()
     price_at_purchase = models.DecimalField(max_digits=10, decimal_places=2)
     discount = models.DecimalField(max_digits=10, decimal_places=2, default=0.00)
-    custom_name = models.CharField(max_length=50, blank=True, null=True)  # For custom name printing
-    custom_number = models.IntegerField(blank=True, null=True)  # For custom number printing
-    patches = models.ManyToManyField(Patch, blank=True)  # Many patches can be selected
+    size = models.CharField(max_length=4, blank=True, null=True) 
+    custom_name = models.CharField(max_length=50, blank=True, null=True) 
+    custom_number = models.IntegerField(blank=True, null=True) 
+    patches = models.ManyToManyField(Patch, blank=True) 
+    notes = models.CharField(max_length=50, blank=True, null=True)
 
     def __str__(self):
         return f"{self.quantity} of {self.product.name} in {self.order}"

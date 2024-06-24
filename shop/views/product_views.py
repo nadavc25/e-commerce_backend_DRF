@@ -6,7 +6,7 @@ from django.shortcuts import get_object_or_404
 
 from shop.utils import generate_firebase_storage_url
 from .serializers import ProductSerializer
-from ..models import League, Product, SportType, Team
+from ..models import League, Product, SizeTypeCategory, SportType, Team
 
 class ProductView(APIView):
     def get_queryset(self):
@@ -14,24 +14,27 @@ class ProductView(APIView):
         league_slug = self.request.query_params.get('league')
         sport_type_slug = self.request.query_params.get('sport_type')
         team_slug = self.request.query_params.get('team')
+        category_slug = self.request.query_params.get('category')
+        size_category_slug = self.request.query_params.get('kids')
 
-        
         # Apply filters if they are in query parameters
         if league_slug:
-            print(league_slug)
             league = get_object_or_404(League, name=league_slug)
-            print("league", league)
             queryset = queryset.filter(league=league)
         if sport_type_slug:
-            print(sport_type_slug)
             sport_type = get_object_or_404(SportType, name=sport_type_slug)
             queryset = queryset.filter(sport_type=sport_type)
         if team_slug:
             team = get_object_or_404(Team, name=team_slug)
             queryset = queryset.filter(team=team)
+        if size_category_slug:
+            size_category = get_object_or_404(SizeTypeCategory, name=size_category)
+            queryset = queryset.filter(size_category_slug=size_category_slug)
+        if category_slug:
+            queryset = queryset.filter(category__name=category_slug)
 
         return queryset
-
+    
     def get(self, request, pk=None, format=None):
         """
         GET method to list products or retrieve a single product.

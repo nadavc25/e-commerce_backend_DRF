@@ -7,6 +7,7 @@ from rest_framework.permissions import IsAuthenticated
 from rest_framework.decorators import permission_classes
 from .serializers import OrderSerializer, OrderDetailsSerializer
 from ..models import Order, OrderDetails
+from ..utils import send_order_notification 
 
 @permission_classes([IsAuthenticated])
 class OrderView(APIView):
@@ -24,10 +25,17 @@ class OrderView(APIView):
                 else:
                     return Response(serializerDt.errors, status=status.HTTP_400_BAD_REQUEST)
             
+            # Calculate and update the total price
+            order.total_price = order.calculate_total_price()
+            order.save()
+
+            # Send email notification
+            send_order_notification(order)
+            
             return Response(serializer.data, status=status.HTTP_201_CREATED)
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
     def get(self, request):
-        my_model = request.user.order_set.all()
-        serializer = OrderSerializer(my_model, many=True)
+        order = request.user.order_set.all().prefetch_related('items')  # Prefetch related items
+        serializer = OrderSerializer(order, many=True)
         return Response(serializer.data)

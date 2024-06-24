@@ -7,6 +7,7 @@ from .views import (
     review_view, team_view, user_views, wishlist_view, League_View
 )
 from . import main_views 
+from rest_framework_simplejwt import views as jwt_views
 
 urlpatterns = [
     path('', main_views.index, name='home'),
@@ -32,4 +33,7 @@ urlpatterns = [
     path('reviews/<int:pk>/', review_view.ReviewView.as_view(), name='review_detail'),
     # Add more patterns for other views as needed
     path('auth/google/', auth_views.GoogleLoginAPIView.as_view(), name='google-login'),
+    path('api/token/', jwt_views.TokenObtainPairView.as_view(), name='token_obtain_pair'),
+    path('auth/token/refresh/', jwt_views.TokenRefreshView.as_view(), name='token_refresh'),
+
 ]

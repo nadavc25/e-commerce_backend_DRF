@@ -2,16 +2,21 @@
 
 from datetime import timedelta
 from pathlib import Path
+import sys
 import firebase_admin
 from firebase_admin import credentials
+from dotenv import load_dotenv
+import os
+
+load_dotenv()
 
 cred = credentials.Certificate('firebase/sport-jersey-e-commerce-firebase-adminsdk-47kfl-31a90b8551.json')
 firebase_admin.initialize_app(cred)
 
 BASE_DIR = Path(__file__).resolve().parent.parent
 
-SECRET_KEY = 'django-insecure-2j*3%9ws$zhf_wnl42#2urfbb67lj#7%(hwu^06#x$3+z=vqel'
-DEBUG = True
+SECRET_KEY = os.getenv('SECRET_KEY')
+DEBUG = os.getenv('DEBUG')
 ALLOWED_HOSTS = ['*']
 
 INSTALLED_APPS = [
@@ -93,32 +98,19 @@ TEMPLATES = [
 WSGI_APPLICATION = 'proj.wsgi.application'
 
 
-# DATABASES = {
-#     'default': {
-#         'ENGINE': 'django.db.backends.postgresql',
-#         'NAME': 'sport_e_commerce',
-#         'USER': 'nadavc25',
-#         'PASSWORD': 'IJrPAXJlbvqFChtLsUXoTmMOyspoFGDu',
-#         'HOST': 'dpg-cpnvun5ds78s73b7nevg-a.frankfurt-postgres.render.com',
-#         'PORT': '5432'
-#     }
-# }
-
-# postgresql://nadavc25:IJrPAXJlbvqFChtLsUXoTmMOyspoFGDu@dpg-cpnvun5ds78s73b7nevg-a.frankfurt-postgres.render.com/sport_e_commerce
-
-
-
 DATABASES = {
-    'default': {
-        'ENGINE': 'django.db.backends.postgresql',
-        'NAME': 'sport_wear',
-        'USER': 'sport_wear_owner',
-        'PASSWORD': 'fgIo3BaEwvz2',
-        'HOST': 'ep-red-sea-a22rpdco.eu-central-1.aws.neon.tech',
-        'PORT': '5432'
-    }
+  'default': {
+    'ENGINE': 'django.db.backends.postgresql',
+    'NAME': os.getenv('PGDATABASE'),
+    'USER': os.getenv('PGUSER'),
+    'PASSWORD': os.getenv('PGPASSWORD'),
+    'HOST': os.getenv('PGHOST'),
+    'PORT': os.getenv('PGPORT', 5432),
+    'OPTIONS': {
+      'sslmode': 'require',
+    },
+  }
 }
-
 
 EMAIL_BACKEND = 'django.core.mail.backends.smtp.EmailBackend'
 EMAIL_HOST = 'smtp.gmail.com'
@@ -150,7 +142,67 @@ TIME_ZONE = 'UTC'
 USE_I18N = True
 USE_TZ = True
 
-STATIC_URL = '/static/images/'
+
+STATIC_URL = '/static/'
+STATIC_ROOT = BASE_DIR / 'staticfiles'
+
+LOGGING = {
+    'version': 1,
+    'disable_existing_loggers': False,
+    'formatters': {
+        'verbose': {
+            'format': '{levelname} {asctime} {module} {message}',
+            'style': '{',
+        },
+        'simple': {
+            'format': '{levelname} {message}',
+            'style': '{',
+        },
+    },
+    'handlers': {
+        'file_info': {
+            'level': 'INFO',
+            'class': 'logging.FileHandler',
+            'filename': os.path.join(BASE_DIR, 'logs', 'info.log'),
+            'formatter': 'verbose',
+            'encoding': 'utf-8',
+        },
+        'file_error': {
+            'level': 'ERROR',
+            'class': 'logging.FileHandler',
+            'filename': os.path.join(BASE_DIR, 'logs', 'errors.log'),
+            'formatter': 'verbose',
+            'encoding': 'utf-8',
+        },
+        'file_debug': {
+            'level': 'DEBUG',
+            'class': 'logging.FileHandler',
+            'filename': os.path.join(BASE_DIR, 'logs', 'debug.log'),
+            'formatter': 'verbose',
+            'encoding': 'utf-8',
+        },
+    },
+    'loggers': {
+        'django': {
+            'handlers': ['file_info', 'file_error', 'file_debug'],
+            'level': 'DEBUG',
+            'propagate': True,
+        },
+        'django.request': {
+            'handlers': ['file_error'],
+            'level': 'ERROR',
+            'propagate': False,
+        },
+    },
+}
+
+CSRF_COOKIE_SECURE = True
+SESSION_COOKIE_SECURE = True
+SECURE_SSL_REDIRECT = True
+SECURE_HSTS_SECONDS = 31536000  # 1 year
+SECURE_HSTS_INCLUDE_SUBDOMAINS = True
+SECURE_HSTS_PRELOAD = True
+
 
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 CORS_ALLOW_ALL_ORIGINS = True

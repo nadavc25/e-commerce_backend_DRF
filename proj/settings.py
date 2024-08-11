@@ -10,6 +10,13 @@ import os
 
 load_dotenv()
 
+print("SECRET_KEY", os.getenv('SECRET_KEY'))
+print("DEBUG", os.getenv('DEBUG'))
+print("Database Name:", os.getenv('PGDATABASE'))
+print("Database User:", os.getenv('PGUSER'))
+print("Database Password:", os.getenv('PGPASSWORD'))
+print("Database Host:", os.getenv('PGHOST'))
+
 cred = credentials.Certificate('firebase/sport-jersey-e-commerce-firebase-adminsdk-47kfl-31a90b8551.json')
 firebase_admin.initialize_app(cred)
 
@@ -196,12 +203,6 @@ LOGGING = {
     },
 }
 
-CSRF_COOKIE_SECURE = True
-SESSION_COOKIE_SECURE = True
-SECURE_SSL_REDIRECT = True
-SECURE_HSTS_SECONDS = 31536000  # 1 year
-SECURE_HSTS_INCLUDE_SUBDOMAINS = True
-SECURE_HSTS_PRELOAD = True
 
 
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'

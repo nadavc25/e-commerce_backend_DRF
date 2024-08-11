@@ -55,6 +55,7 @@ class SportType(models.Model):
 # League Model
 class League(models.Model):
     name = models.CharField(max_length=100, unique=True)
+    description = models.CharField(max_length=100, default='', blank= True)  # Add unique=True if needed
     sport_type = models.ForeignKey(SportType, related_name='leagues', on_delete=models.CASCADE)
     image = models.URLField(blank=True, null=True)
 
@@ -99,20 +100,6 @@ class Season(models.Model):
     def __str__(self):
         return self.name
 
-# Category model
-class Category(models.Model):
-    name = models.CharField(max_length=100)
-    description = models.TextField(blank=True, null=True)
-    image = models.URLField(blank=True, null=True)
-    slug = models.SlugField(max_length=100, unique=True, blank=True)
-
-    def save(self, *args, **kwargs):
-        if not self.slug:
-            self.slug = slugify(self.name)
-        super(Category, self).save(*args, **kwargs)
-
-    def __str__(self):
-        return self.name
 
 # Product model
 class Product(models.Model):
@@ -131,7 +118,7 @@ class Product(models.Model):
     description = models.TextField(blank=True)
     max_available_size = models.CharField(max_length=3, choices=MAX_SIZE_CHOICES, default='2XL')
     main_image_url = models.URLField(blank=True, null=True)  # URL of the main image stored in Firebase Storage
-    category = models.ForeignKey(Category, on_delete=models.CASCADE, blank=True, null=True)
+    category = models.CharField(blank=True, null=True)
     sport_type = models.ForeignKey(SportType, on_delete=models.CASCADE)
     league = models.ForeignKey(League, on_delete=models.CASCADE)
     team = models.ForeignKey(Team, on_delete=models.CASCADE)

@@ -92,31 +92,32 @@ TEMPLATES = [
 
 WSGI_APPLICATION = 'proj.wsgi.application'
 
+
 # DATABASES = {
 #     'default': {
 #         'ENGINE': 'django.db.backends.postgresql',
-#         'NAME': 'e_commerce_2sk8',
+#         'NAME': 'sport_e_commerce',
 #         'USER': 'nadavc25',
-#         'PASSWORD': 'WQg0fw3hLxr3lJhVVZ1CiPyAzjn45mJX',
-#         'HOST': 'dpg-cnsnkuol5elc73fllr20-a.frankfurt-postgres.render.com',
+#         'PASSWORD': 'IJrPAXJlbvqFChtLsUXoTmMOyspoFGDu',
+#         'HOST': 'dpg-cpnvun5ds78s73b7nevg-a.frankfurt-postgres.render.com',
 #         'PORT': '5432'
 #     }
 # }
 
+# postgresql://nadavc25:IJrPAXJlbvqFChtLsUXoTmMOyspoFGDu@dpg-cpnvun5ds78s73b7nevg-a.frankfurt-postgres.render.com/sport_e_commerce
+
+
+
 DATABASES = {
     'default': {
         'ENGINE': 'django.db.backends.postgresql',
-        'NAME': 'sport_e_commerce',
-        'USER': 'nadavc25',
-        'PASSWORD': 'IJrPAXJlbvqFChtLsUXoTmMOyspoFGDu',
-        'HOST': 'dpg-cpnvun5ds78s73b7nevg-a.frankfurt-postgres.render.com',
+        'NAME': 'sport_wear',
+        'USER': 'sport_wear_owner',
+        'PASSWORD': 'fgIo3BaEwvz2',
+        'HOST': 'ep-red-sea-a22rpdco.eu-central-1.aws.neon.tech',
         'PORT': '5432'
     }
 }
-
-
-
-
 
 
 EMAIL_BACKEND = 'django.core.mail.backends.smtp.EmailBackend'

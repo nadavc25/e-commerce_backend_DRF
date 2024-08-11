@@ -5,13 +5,29 @@ from rest_framework_simplejwt.views import TokenObtainPairView
 from rest_framework import status
 from rest_framework.views import APIView
 from shop.models import User
-from shop.views.serializers import MyTokenObtainPairSerializer
+from shop.views.serializers import MyTokenObtainPairSerializer, ProductSerializer
 from rest_framework_simplejwt.tokens import RefreshToken
 
 
 @api_view(["get"])
 def index(request):
     return Response("hello")
+
+from rest_framework.decorators import api_view
+from rest_framework.response import Response
+from .models import Product
+
+@api_view(['GET'])
+def search_products(request):
+    query = request.GET.get('q', '')
+    if query:
+        products = Product.objects.filter(name__icontains=query)
+    else:
+        products = Product.objects.none()
+
+    serializer = ProductSerializer(products, many=True)
+    return Response(serializer.data)
+
 
 class Logout(APIView):
     def post(self, request):

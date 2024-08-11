@@ -1,7 +1,7 @@
 # shop\views\serializers.py
 
 from rest_framework import serializers
-from ..models import  League, Category, User, Patch, Product, ProductImage, Order, OrderDetails, Review, Cart, CartItem, Wishlist, WishlistItem, Team
+from ..models import  League, User, Patch, Product, ProductImage, Order, OrderDetails, Review, Cart, CartItem, Wishlist, WishlistItem, Team
 from rest_framework_simplejwt.serializers import TokenObtainPairSerializer
 from ..utils import generate_firebase_storage_url  # Make sure this is correctly imported
 
@@ -40,11 +40,6 @@ class PatchSerializer(serializers.ModelSerializer):
         model = Patch
         fields = '__all__'
 
-class CategorySerializer(serializers.ModelSerializer):
-    class Meta:
-        model = Category
-        fields = '__all__'
-
 class ProductSerializer(serializers.ModelSerializer):
     class Meta:
         model = Product
@@ -78,7 +73,7 @@ class OrderDetailsSerializer(serializers.ModelSerializer):
             'price': str(product.price),
             'main_image_url': product.main_image_url,
             'description': product.description,
-            'category': product.category.name if product.category else None
+            'category': product.category if product.category else None
         }
         return OrderDetails.objects.create(**validated_data)
 

@@ -1,37 +1,38 @@
-# shop\views\product_views.py
 from rest_framework.views import APIView
 from rest_framework.response import Response
 from rest_framework import status
 from django.shortcuts import get_object_or_404
-
+from django.core.exceptions import FieldError
 from shop.utils import generate_firebase_storage_url
 from .serializers import ProductSerializer
 from ..models import League, Product, SizeTypeCategory, SportType, Team
 
 class ProductView(APIView):
     def get_queryset(self):
-        queryset = Product.objects.filter(available=True)  # Only fetch products that are marked as available
-        league_slug = self.request.query_params.get('league')
-        sport_type_slug = self.request.query_params.get('sport_type')
-        team_slug = self.request.query_params.get('team')
-        category_slug = self.request.query_params.get('category')
-        size_category_slug = self.request.query_params.get('kids')
+        queryset = Product.objects.filter(available=True)
+        filter_params = self.request.query_params
+        print("Filter Params:", filter_params)
 
-        # Apply filters if they are in query parameters
-        if league_slug:
-            league = get_object_or_404(League, name=league_slug)
-            queryset = queryset.filter(league=league)
-        if sport_type_slug:
-            sport_type = get_object_or_404(SportType, name=sport_type_slug)
-            queryset = queryset.filter(sport_type=sport_type)
-        if team_slug:
-            team = get_object_or_404(Team, name=team_slug)
-            queryset = queryset.filter(team=team)
-        if size_category_slug:
-            size_category = get_object_or_404(SizeTypeCategory, name=size_category)
-            queryset = queryset.filter(size_category_slug=size_category_slug)
-        if category_slug:
-            queryset = queryset.filter(category__name=category_slug)
+        for filter_type, filter_value in filter_params.items():
+            if filter_type == 'available':
+                continue  # Skip the 'available' filter as it's already applied
+            
+            try:
+                field = Product._meta.get_field(filter_type)
+                if field.get_internal_type() == 'ForeignKey':
+                    # Map string filter value to the ForeignKey ID
+                    related_model = field.related_model
+                    related_obj = get_object_or_404(related_model, name__iexact=filter_value)
+                    filter_kwargs = {f'{filter_type}__id': related_obj.id}
+                else:
+                    filter_kwargs = {f'{filter_type}__iexact': filter_value}
+                queryset = queryset.filter(**filter_kwargs)
+            except FieldError:
+                print(f"FieldError: Unsupported field '{filter_type}'")
+                queryset = Product.objects.none()  # Return empty queryset if field is not valid
+            except related_model.DoesNotExist:
+                print(f"Error: Related object with name '{filter_value}' does not exist.")
+                queryset = Product.objects.none()  # Return empty queryset if related object does not exist
 
         return queryset
     

@@ -17,7 +17,7 @@ print("Database User:", os.getenv('PGUSER'))
 print("Database Password:", os.getenv('PGPASSWORD'))
 print("Database Host:", os.getenv('PGHOST'))
 
-cred = credentials.Certificate('firebase/sport-jersey-e-commerce-firebase-adminsdk-47kfl-31a90b8551.json')
+cred = credentials.Certificate('sport-jersey-e-commerce-firebase-adminsdk-47kfl-31a90b8551.json')
 firebase_admin.initialize_app(cred)
 
 BASE_DIR = Path(__file__).resolve().parent.parent

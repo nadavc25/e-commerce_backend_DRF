@@ -21,6 +21,10 @@ cred = credentials.Certificate('sport-jersey-e-commerce-firebase-adminsdk-47kfl-
 firebase_admin.initialize_app(cred)
 
 BASE_DIR = Path(__file__).resolve().parent.parent
+LOGS_DIR = BASE_DIR / 'logs'
+
+if not LOGS_DIR.exists():
+    LOGS_DIR.mkdir(parents=True, exist_ok=True)
 
 SECRET_KEY = os.getenv('SECRET_KEY')
 DEBUG = os.getenv('DEBUG')
@@ -170,21 +174,21 @@ LOGGING = {
         'file_info': {
             'level': 'INFO',
             'class': 'logging.FileHandler',
-            'filename': os.path.join(BASE_DIR, 'logs', 'info.log'),
+            'filename': os.path.join(LOGS_DIR, 'info.log'),
             'formatter': 'verbose',
             'encoding': 'utf-8',
         },
         'file_error': {
             'level': 'ERROR',
             'class': 'logging.FileHandler',
-            'filename': os.path.join(BASE_DIR, 'logs', 'errors.log'),
+            'filename': os.path.join(LOGS_DIR, 'errors.log'),
             'formatter': 'verbose',
             'encoding': 'utf-8',
         },
         'file_debug': {
             'level': 'DEBUG',
             'class': 'logging.FileHandler',
-            'filename': os.path.join(BASE_DIR, 'logs', 'debug.log'),
+            'filename': os.path.join(LOGS_DIR, 'debug.log'),
             'formatter': 'verbose',
             'encoding': 'utf-8',
         },
@@ -202,7 +206,6 @@ LOGGING = {
         },
     },
 }
-
 
 
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'

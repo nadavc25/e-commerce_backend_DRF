@@ -15,10 +15,9 @@ LOGS_DIR = BASE_DIR / 'logs'
 
 # Determine the environment (development or production)
 ENVIRONMENT = os.getenv('ENVIRONMENT', 'development')  # Default to 'development'
-
 # Setup Firebase credentials based on the environment
 if ENVIRONMENT == 'development':
-    cred_path = BASE_DIR / 'proj' / 'sport-jersey-e-commerce-firebase-adminsdk-47kfl-31a90b8551.json'
+    cred_path = BASE_DIR / 'firebase' / 'sport-jersey-e-commerce-firebase-adminsdk-47kfl-31a90b8551.json'
 else:  # Production
     cred_path = 'sport-jersey-e-commerce-firebase-adminsdk-47kfl-31a90b8551.json'
 

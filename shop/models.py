@@ -128,7 +128,7 @@ class Product(models.Model):
     season = models.ForeignKey(Season, on_delete=models.CASCADE) #summer/winter
     brand = models.ForeignKey(Brand, on_delete=models.CASCADE, blank=True, null=True)
     collection = models.ForeignKey(Collection, on_delete=models.CASCADE, blank=True, null=True)
-    created_at = models.DateTimeField(auto_now_add=True)
+    created_at = models.DateTimeField(auto_now_add=True, null=True)
     updated_at = models.DateTimeField(auto_now=True)
     available = models.BooleanField(default=False)
     slug = models.SlugField(max_length=200, unique=True, blank=True)

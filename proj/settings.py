@@ -9,19 +9,23 @@ from dotenv import load_dotenv
 import os
 
 load_dotenv()
-
-print("SECRET_KEY", os.getenv('SECRET_KEY'))
-print("DEBUG", os.getenv('DEBUG'))
-print("Database Name:", os.getenv('PGDATABASE'))
-print("Database User:", os.getenv('PGUSER'))
-print("Database Password:", os.getenv('PGPASSWORD'))
-print("Database Host:", os.getenv('PGHOST'))
-
-cred = credentials.Certificate('sport-jersey-e-commerce-firebase-adminsdk-47kfl-31a90b8551.json')
-firebase_admin.initialize_app(cred)
-
 BASE_DIR = Path(__file__).resolve().parent.parent
 LOGS_DIR = BASE_DIR / 'logs'
+
+
+# Determine the environment (development or production)
+ENVIRONMENT = os.getenv('ENVIRONMENT', 'development')  # Default to 'development'
+
+# Setup Firebase credentials based on the environment
+if ENVIRONMENT == 'development':
+    cred_path = BASE_DIR / 'proj' / 'sport-jersey-e-commerce-firebase-adminsdk-47kfl-31a90b8551.json'
+else:  # Production
+    cred_path = 'sport-jersey-e-commerce-firebase-adminsdk-47kfl-31a90b8551.json'
+
+# Initialize Firebase
+cred = credentials.Certificate(cred_path)
+firebase_admin.initialize_app(cred)
+
 
 if not LOGS_DIR.exists():
     LOGS_DIR.mkdir(parents=True, exist_ok=True)
